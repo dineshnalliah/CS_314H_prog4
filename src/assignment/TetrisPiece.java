@@ -1,7 +1,6 @@
 package assignment;
 
 import java.awt.Point;
-import java.util.Arrays;
 
 /**
  * An immutable representation of a tetris piece in a particular rotation.
@@ -24,43 +23,41 @@ public final class TetrisPiece implements Piece {
     private PieceType type;
     private Point[] body;
     private int rotationIndex;
-    private Point[][] rotations;
-    // private TetrisPiece clockWisePiece;
-    // private TetrisPiece counterClockWisePiece;
-
-
-
-    
+    private TetrisPiece clockwise;
+    private TetrisPiece counterclockwise;
 
     public TetrisPiece(PieceType type) {
-        switch (type) {
-            case T:
-                rotationIndex = 0;
-                body = type.getSpawnBody();
 
-            case SQUARE:
+        // don't even have to do a switch case since all pieces have 4 rotations
 
-            
-            default:
+        // first one will be the default and thus index 0
+        this(type, 0, type.getSpawnBody());
+
+        int dimension = type.getBoundingBox().width; // bounding box side length
+        TetrisPiece before = this; // start with the original
+
+        for (int i = 1; i < 4; i++) {
+            // create a clockwise rotation
+            TetrisPiece next = new TetrisPiece(type, i, performClockWiseRotation(body, dimension));
+
+            // link the two pieces immediately
+            before.clockwise = next;
+            next.counterclockwise = before;
+
+            // shift to the next rotation
+            before = next;
         }
+
+
+        // should close the circle, 'this' is still the initial piece, and before is now the last rotation
+        before.clockwise = this;
+        this.counterclockwise = before;
     }
 
     public TetrisPiece(PieceType type, int rotationIndex, Point[] body) {
         this.type = type;
         this.rotationIndex = rotationIndex;
         this.body = body;
-        createOrientations();
-    }
-
-    private void createOrientations() {
-        rotations = new Point[4][body.length];
-        rotations[rotationIndex] = Arrays.copyOf(body, body.length);
-        Point[] temp = Arrays.copyOf(body, body.length);
-
-        for (int i = (rotationIndex + 1 % 4); i != rotationIndex; i = (i + 1 % 4)) {
-            rotations[i] = performClockWiseRotation(body, (int)(type.getBoundingBox().getWidth()));
-            temp = Arrays.copyOf(rotations[i], body.length);
-        }
     }
 
     private Point[] performClockWiseRotation(Point[] cur, int dimension) {
@@ -71,6 +68,8 @@ public final class TetrisPiece implements Piece {
         return transformed;
     }
 
+
+    // dont think this is relevant anymore
     private Point[] performCounterClockWiseRotation(Point[] cur, int dimension) {
         Point[] transformed = new Point[cur.length];
         for (int i = 0 ; i < cur.length; i++) {
@@ -91,12 +90,12 @@ public final class TetrisPiece implements Piece {
 
     @Override
     public Piece clockwisePiece() {
-        return new TetrisPiece(type, (rotationIndex + 1) % 4, rotations[(rotationIndex + 1) % 4]);
+        return clockwise;
     }
 
     @Override
     public Piece counterclockwisePiece() {
-        return new TetrisPiece(type, (rotationIndex - 1) % 4, rotations[(rotationIndex - 1) % 4]);
+        return counterclockwise;
     }
 
     @Override
