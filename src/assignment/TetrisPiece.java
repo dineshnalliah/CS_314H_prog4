@@ -1,6 +1,7 @@
 package assignment;
 
 import java.awt.Point;
+import java.util.Arrays;
 
 /**
  * An immutable representation of a tetris piece in a particular rotation.
@@ -12,6 +13,13 @@ import java.awt.Point;
  */
 public final class TetrisPiece implements Piece {
 
+    private PieceType type;
+    private Point[] body;
+    private int rotationIndex;
+    private int[] skirt;
+    private TetrisPiece clockwise;
+    private TetrisPiece counterclockwise;
+
     /**
      * Construct a tetris piece of the given type. The piece should be in it's spawn orientation,
      * i.e., a rotation index of 0.
@@ -19,12 +27,6 @@ public final class TetrisPiece implements Piece {
      * You may freely add additional constructors, but please leave this one - it is used both in
      * the runner code and testing code.
      */
-    
-    private PieceType type;
-    private Point[] body;
-    private int rotationIndex;
-    private TetrisPiece clockwise;
-    private TetrisPiece counterclockwise;
 
     public TetrisPiece(PieceType type) {
 
@@ -49,7 +51,7 @@ public final class TetrisPiece implements Piece {
         }
 
 
-        // should close the circle, 'this' is still the initial piece, and before is now the last rotation
+        // closing the circle
         before.clockwise = this;
         this.counterclockwise = before;
     }
@@ -58,6 +60,7 @@ public final class TetrisPiece implements Piece {
         this.type = type;
         this.rotationIndex = rotationIndex;
         this.body = body;
+        this.skirt = calculateSkirt();
     }
 
     private Point[] performClockWiseRotation(Point[] cur, int dimension) {
@@ -68,14 +71,16 @@ public final class TetrisPiece implements Piece {
         return transformed;
     }
 
+    private int[] calculateSkirt() {
 
-    // dont think this is relevant anymore
-    private Point[] performCounterClockWiseRotation(Point[] cur, int dimension) {
-        Point[] transformed = new Point[cur.length];
-        for (int i = 0 ; i < cur.length; i++) {
-            transformed[i] = new Point((int)(dimension - 1 - cur[i].getY()),(int)(cur[i].getX()));
+        int[] temp = new int[type.getBoundingBox().width];
+        Arrays.fill(temp, Integer.MAX_VALUE);
+
+        for (Point p : body) {
+            temp[p.x] = Math.min(p.y, temp[p.x]);
         }
-        return transformed;
+
+        return skirt;
     }
 
     @Override
@@ -100,14 +105,12 @@ public final class TetrisPiece implements Piece {
 
     @Override
     public int getWidth() {
-        // TODO: Implement me.
-        return -1;
+        return type.getBoundingBox().width;
     }
 
     @Override
     public int getHeight() {
-        // TODO: Implement me.
-        return -1;
+        return type.getBoundingBox().height;
     }
 
     @Override
@@ -117,18 +120,18 @@ public final class TetrisPiece implements Piece {
 
     @Override
     public int[] getSkirt() {
-        // TODO: Implement me.
-        return null;
+        return skirt;
     }
 
     @Override
     public boolean equals(Object other) {
         // Ignore objects which aren't also tetris pieces.
         if(!(other instanceof TetrisPiece)) return false;
-        TetrisPiece otherPiece = (TetrisPiece) other;
 
-        // TODO: Implement me.
-        return false;
+        TetrisPiece otherPiece = (TetrisPiece) other;
+        
+        // check for piece type and orientation equality
+        return this.type.equals(otherPiece.type) && this.rotationIndex == otherPiece.rotationIndex ? true : false;
     }
 }
 
