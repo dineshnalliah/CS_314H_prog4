@@ -21,10 +21,12 @@ public final class TetrisPiece implements Piece {
     private TetrisPiece counterclockwise;
 
     /**
-     * Construct a tetris piece of the given type. The piece should be in it's spawn orientation,
+     * Construct a tetris piece of the given type. The piece should be in it's spawn
+     * orientation,
      * i.e., a rotation index of 0.
      * 
-     * You may freely add additional constructors, but please leave this one - it is used both in
+     * You may freely add additional constructors, but please leave this one - it is
+     * used both in
      * the runner code and testing code.
      */
 
@@ -40,7 +42,7 @@ public final class TetrisPiece implements Piece {
 
         for (int i = 1; i < 4; i++) {
             // create a clockwise rotation
-            TetrisPiece next = new TetrisPiece(type, i, performClockWiseRotation(body, dimension));
+            TetrisPiece next = new TetrisPiece(type, i, performClockWiseRotation(before.body, dimension));
 
             // link the two pieces immediately
             before.clockwise = next;
@@ -49,7 +51,6 @@ public final class TetrisPiece implements Piece {
             // shift to the next rotation
             before = next;
         }
-
 
         // closing the circle
         before.clockwise = this;
@@ -65,8 +66,8 @@ public final class TetrisPiece implements Piece {
 
     private Point[] performClockWiseRotation(Point[] cur, int dimension) {
         Point[] transformed = new Point[cur.length];
-        for (int i = 0 ; i < cur.length; i++) {
-            transformed[i] = new Point((int)cur[i].getY(),(int)(dimension - 1 - cur[i].getX()));
+        for (int i = 0; i < cur.length; i++) {
+            transformed[i] = new Point((int) cur[i].getY(), (int) (dimension - 1 - cur[i].getX()));
         }
         return transformed;
     }
@@ -80,7 +81,7 @@ public final class TetrisPiece implements Piece {
             temp[p.x] = Math.min(p.y, temp[p.x]);
         }
 
-        return skirt;
+        return temp;
     }
 
     @Override
@@ -126,12 +127,12 @@ public final class TetrisPiece implements Piece {
     @Override
     public boolean equals(Object other) {
         // Ignore objects which aren't also tetris pieces.
-        if(!(other instanceof TetrisPiece)) return false;
+        if (!(other instanceof TetrisPiece))
+            return false;
 
         TetrisPiece otherPiece = (TetrisPiece) other;
-        
+
         // check for piece type and orientation equality
         return this.type.equals(otherPiece.type) && this.rotationIndex == otherPiece.rotationIndex ? true : false;
     }
 }
-
