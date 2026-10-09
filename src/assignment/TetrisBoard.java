@@ -1,6 +1,8 @@
 package assignment;
 
 import java.awt.Point;
+import java.util.Arrays;
+import java.util.Objects;
 
 /**
  * Represents a Tetris board -- essentially a 2-d grid of piece types (or nulls). Supports
@@ -44,31 +46,69 @@ public final class TetrisBoard implements Board {
         rowsCleared = 0;
     }
 
+    // copy constructor used for testMove()
+    private TetrisBoard(TetrisBoard other) {
+        this.width = other.width;
+        this.height = other.height;
+
+        this.grid = new Piece.PieceType[height][];
+
+        // have to clone by row so references aren't shared between the copies
+        for (int y = 0; y < height; y++) {
+            this.grid[y] = other.grid[y].clone();
+        }
+        this.rowWidth = other.rowWidth.clone();
+        this.colHeights = other.colHeights.clone();
+        this.maxHeight = other.maxHeight;
+
+        this.currentPiece = other.currentPiece; // immutable so can directly assign
+        this.currentPosition = other.currentPosition == null ? null : new Point(other.currentPosition); // point is mutable so need to create new object
+
+        this.lastAction = other.lastAction;
+        this.lastResult = other.lastResult;
+        this.rowsCleared = other.rowsCleared;
+    }
+
     @Override
     public Result move(Action act) { 
 
         lastAction = act;
         rowsCleared = 0;
 
+        if (currentPiece == null) {
+            lastResult = Result.NO_PIECE;
+            return lastResult;
+        }
+
         // change so lastResult is also updated
         switch (act) {
             case LEFT: 
-                return tryHorizontalShift(-1, currentPosition.x, currentPosition.y);
+                lastResult = tryHorizontalShift(-1, currentPosition.x, currentPosition.y);
+                break;
             case RIGHT: 
-                return tryHorizontalShift(1, currentPosition.x, currentPosition.y);
+                lastResult = tryHorizontalShift(1, currentPosition.x, currentPosition.y);
+                break;
             case DOWN: 
-                return tryVerticalShift(-1, currentPosition.x, currentPosition.y);
+                lastResult = tryVerticalShift(-1, currentPosition.x, currentPosition.y);
+                break;
             case DROP:
-                return Result.SUCCESS;
+                lastResult = drop();
+                break;
             case CLOCKWISE:
-                return Result.SUCCESS;
+                lastResult = tryRotate(true);
+                break;
             case COUNTERCLOCKWISE:
-                return Result.SUCCESS;
+                lastResult = tryRotate(false);
+                break;
             case NOTHING:
-                return Result.SUCCESS;
+                lastResult = Result.SUCCESS;
+                break;
             default:
-                return Result.NO_PIECE; 
+                lastResult = Result.SUCCESS; 
+                break;
         }
+
+        return lastResult;
     }
 
     private boolean isValid(Piece piece, int x, int y) {
@@ -87,6 +127,18 @@ public final class TetrisBoard implements Board {
         }
 
         return true;
+    }
+
+    private static Point[] getPossibleKicks(Piece piece, boolean clockwise) {
+        int from = piece.getRotationIndex(); 
+        switch (piece.getType()) {
+            case SQUARE:
+                return new Point[] {new Point(0, 0)}; // no kicks
+            case STICK:
+                return clockwise ? Piece.I_CLOCKWISE_WALL_KICKS[from] : Piece.I_COUNTERCLOCKWISE_WALL_KICKS[from];
+            default:
+                return clockwise ? Piece.NORMAL_CLOCKWISE_WALL_KICKS[from] : Piece.NORMAL_COUNTERCLOCKWISE_WALL_KICKS[from];
+        }
     }
 
     private Result tryHorizontalShift(int dx, int x, int y) {
@@ -108,6 +160,16 @@ public final class TetrisBoard implements Board {
         return Result.PLACE;
     }
 
+    private Result drop() { // could be optimized maybe
+        int y = currentPosition.y;
+        while (isValid(currentPiece, currentPosition.x, y - 1)) {
+            y--;
+        }
+        currentPosition = new Point(currentPosition.x, y);
+        placePiece();
+        return Result.PLACE;
+    }
+
     private void placePiece() {
         for (Point p : currentPiece.getBody()) {
             int x = currentPosition.x + p.x;
@@ -120,23 +182,75 @@ public final class TetrisBoard implements Board {
         }
 
         // need to call some clearRows() method here, update rowsCleared
+        rowsCleared = clearRows();
 
         // this piece is no longer playable after placing
         currentPiece = null; // will make next move() call return NO_PIECE
         currentPosition = null;
     }
 
-    // private int clearRows() {}
-    // this method will also need another private method to recalculate the heights, since clearing rows shifts heights
+    private int clearRows() {
+        int cur = 0;
 
-    // private void recalculateHeights() {}
+        for (int r = 0; r < height; r++) {
+            if (rowWidth[r] == width) continue;
+            grid[cur] = grid[r];
+            rowWidth[cur] = rowWidth[r];
+            cur++;
+        }
 
-    
+        int clearedRows = height - cur;
+
+        // fill the new rows
+        for (; cur < height; cur++) {
+            grid[cur] = new Piece.PieceType[width];
+            rowWidth[cur] = 0;
+        }
+
+        if (clearedRows > 0) recalculateHeights();
+        
+        return clearedRows;
+    }
+
+    private void recalculateHeights() {
+        int previousHighest = maxHeight - 1;
+        maxHeight = 0;
+        for (int x = 0; x < width; x++) {
+            int h = 0;
+            for (int y = previousHighest; y >= 0; y--) {
+                if (grid[y][x] != null) {
+                    h = y + 1;
+                    break;
+                }
+            }
+            colHeights[x] = h;
+            maxHeight = Math.max(maxHeight, h);
+        }
+    }
+
+    private Result tryRotate(boolean clockwise) {
+        Piece rotated = clockwise ? currentPiece.clockwisePiece() : currentPiece.counterclockwisePiece();
+
+        for (Point kick : getPossibleKicks(currentPiece, clockwise)) {
+            int newX = currentPosition.x + kick.x;
+            int newY = currentPosition.y + kick.y;
+            if (isValid(rotated, newX, newY)) {
+                currentPiece = rotated;
+                currentPosition = new Point(newX, newY);
+                return Result.SUCCESS;
+            }
+        }
+        return Result.OUT_BOUNDS;
+    }
 
 
 
     @Override
-    public Board testMove(Action act) { return null; }
+    public Board testMove(Action act) { 
+        TetrisBoard copy = new TetrisBoard(this);
+        copy.move(act);
+        return copy; 
+    }
 
     @Override
     public Piece getCurrentPiece() { 
@@ -145,7 +259,7 @@ public final class TetrisBoard implements Board {
 
     @Override
     public Point getCurrentPiecePosition() { 
-        return new Point(currentPosition); 
+        return currentPosition == null ? null : new Point(currentPosition); 
     }
 
     @Override
@@ -154,7 +268,7 @@ public final class TetrisBoard implements Board {
         if (p == null || spawnPosition == null) {
             throw new IllegalArgumentException("Piece and position must not be null");
         }
-        if (isValid(p, spawnPosition.x, spawnPosition.y)) {
+        if (!isValid(p, spawnPosition.x, spawnPosition.y)) {
             throw new IllegalArgumentException("Piece does not fit at " + spawnPosition);
         }
 
@@ -163,7 +277,11 @@ public final class TetrisBoard implements Board {
     }
 
     @Override
-    public boolean equals(Object other) { return false; }
+    public boolean equals(Object other) { 
+        if (!(other instanceof TetrisBoard)) return false;
+        TetrisBoard o = (TetrisBoard) other;
+        return width == o.width && height == o.height && Objects.equals(currentPiece, o.currentPiece) && Objects.equals(currentPosition, o.currentPosition) && Arrays.deepEquals(grid, o.grid);
+    }
 
     @Override
     public Result getLastResult() { 
@@ -197,8 +315,15 @@ public final class TetrisBoard implements Board {
 
     @Override
     public int dropHeight(Piece piece, int x) { 
-        // calculate across the width of the bounding box for the max of getColumnHeight
-        return -1; 
+        int[] skirt = piece.getSkirt();
+        int result = Integer.MIN_VALUE;
+
+        for (int i = 0; i < skirt.length; i++) {
+            if (skirt[i] == Integer.MAX_VALUE) continue; // no blocks in this column
+            int landing = colHeights[x + i] - skirt[i];
+            result = Math.max(result, landing);
+        }
+        return result;
     }
 
     @Override
