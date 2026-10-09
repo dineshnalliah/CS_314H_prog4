@@ -1,6 +1,6 @@
 package assignment;
 
-import java.awt.*;
+import java.awt.Point;
 
 /**
  * Represents a Tetris board -- essentially a 2-d grid of piece types (or nulls). Supports
@@ -34,13 +34,23 @@ public final class TetrisBoard implements Board {
         this.height = height;
 
         grid = new Piece.PieceType[height][width];
+
+        lastAction = Action.NOTHING;
+        lastResult = Result.NO_PIECE;
+
+        colHeights = new int[width];
+        rowWidth = new int[height];
+
+        rowsCleared = 0;
     }
 
     @Override
     public Result move(Action act) { 
 
         lastAction = act;
+        rowsCleared = 0;
 
+        // change so lastResult is also updated
         switch (act) {
             case LEFT: 
                 return tryHorizontalShift(-1, currentPosition.x, currentPosition.y);
@@ -61,9 +71,9 @@ public final class TetrisBoard implements Board {
         }
     }
 
-    private boolean isValid(int x, int y) {
+    private boolean isValid(Piece piece, int x, int y) {
 
-        Point[] temp = currentPiece.getBody();
+        Point[] temp = piece.getBody();
 
         for (Point p : temp) {
             int x2 = x + p.x;
@@ -80,9 +90,8 @@ public final class TetrisBoard implements Board {
     }
 
     private Result tryHorizontalShift(int dx, int x, int y) {
-        if (isValid(x + dx, y)) {
-            currentPosition.x = x + dx;
-            currentPosition.y = y;
+        if (isValid(currentPiece, x + dx, y)) {
+            currentPosition = new Point(x + dx, y);
             return Result.SUCCESS;
         }
 
@@ -90,9 +99,8 @@ public final class TetrisBoard implements Board {
     }
 
     private Result tryVerticalShift(int dy, int x, int y) {
-        if (isValid(x, y + dy)) {
-            currentPosition.x = x;
-            currentPosition.y = y + dy;
+        if (isValid(currentPiece, x, y + dy)) {
+            currentPosition = new Point(x, y + dy);
             return Result.SUCCESS;
         }
 
@@ -104,11 +112,28 @@ public final class TetrisBoard implements Board {
         for (Point p : currentPiece.getBody()) {
             int x = currentPosition.x + p.x;
             int y = currentPosition.y + p.y;
+
             grid[y][x] = currentPiece.getType();
+            colHeights[x] = Math.max(colHeights[x], y+1);
+            rowWidth[y]++;
+            maxHeight = Math.max(maxHeight, colHeights[x]);
         }
+
+        // need to call some clearRows() method here, update rowsCleared
+
+        // this piece is no longer playable after placing
+        currentPiece = null; // will make next move() call return NO_PIECE
+        currentPosition = null;
     }
 
+    // private int clearRows() {}
+    // this method will also need another private method to recalculate the heights, since clearing rows shifts heights
+
+    // private void recalculateHeights() {}
+
     
+
+
 
     @Override
     public Board testMove(Action act) { return null; }
@@ -120,13 +145,18 @@ public final class TetrisBoard implements Board {
 
     @Override
     public Point getCurrentPiecePosition() { 
-        return currentPosition; 
+        return new Point(currentPosition); 
     }
 
     @Override
     public void nextPiece(Piece p, Point spawnPosition) {
-
         // check if spawn pos is valid
+        if (p == null || spawnPosition == null) {
+            throw new IllegalArgumentException("Piece and position must not be null");
+        }
+        if (isValid(p, spawnPosition.x, spawnPosition.y)) {
+            throw new IllegalArgumentException("Piece does not fit at " + spawnPosition);
+        }
 
         currentPiece = p;
         currentPosition = new Point(spawnPosition);
@@ -184,6 +214,7 @@ public final class TetrisBoard implements Board {
     @Override
     public Piece.PieceType getGrid(int x, int y) { 
         // check bounds
+        if (x < 0 || x >= width || y < 0 || y >= height) return null;
         return grid[y][x]; 
     }
 }
