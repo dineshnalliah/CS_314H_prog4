@@ -2,9 +2,8 @@ package assignment;
 
 import static org.junit.Assert.assertNull;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.fail;
+// import static org.junit.jupiter.api.Assertions.fail;
 
 import org.junit.jupiter.api.Test;
 
@@ -63,24 +62,24 @@ public class BlackBoxTetrisBoardTest {
         assertEquals(spawn, b.getCurrentPiecePosition());
     }
 
-    // nextPiece should throw IllegalArgumentException when given null arguments
-    @Test
-    void testNextPieceExceptions() {
-        Board b = createBoard();
-        Piece square = new TetrisPiece(PieceType.SQUARE);
+    // we originally had nextPiece() throwing exceptions
+    // @Test
+    // void testNextPieceExceptions() {
+    //     Board b = createBoard();
+    //     Piece square = new TetrisPiece(PieceType.SQUARE);
 
-        try {
-            b.nextPiece(null, new Point(0, 0));
-            fail("Expected IllegalArgumentException for null piece");
-        } catch (IllegalArgumentException e) {
-        }
+    //     try {
+    //         b.nextPiece(null, new Point(0, 0));
+    //         fail("Expected IllegalArgumentException for null piece");
+    //     } catch (IllegalArgumentException e) {
+    //     }
 
-        try {
-            b.nextPiece(square, null);
-            fail("Expected IllegalArgumentException for null spawn position");
-        } catch (IllegalArgumentException e) {
-        }
-    }
+    //     try {
+    //         b.nextPiece(square, null);
+    //         fail("Expected IllegalArgumentException for null spawn position");
+    //     } catch (IllegalArgumentException e) {
+    //     }
+    // }
 
     // testing that move when there is no active piece should return No_PIECE
     @Test
