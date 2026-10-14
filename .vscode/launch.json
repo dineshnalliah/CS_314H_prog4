@@ -4,7 +4,7 @@
             "type": "java",
             "name": "JTetris",
             "request": "launch",
-            "mainClass": "assignment.JTetris",
+            "mainClass": "assignment.JBrainTetris",
             "projectName": "prog4"
         },
         {

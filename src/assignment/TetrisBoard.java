@@ -351,4 +351,17 @@ public final class TetrisBoard implements Board {
         if (x < 0 || x >= width || y < 0 || y >= height) return null;
         return grid[y][x]; 
     }
+
+    public String toString() {
+        String s = "";
+        for (int i = 0; i < width; i++) {
+            for (int j = 0; j < height; j++) {
+                s += grid[j][i].toString() + " ";
+            }
+            s += "\n";
+        }
+
+        return s;
+    }
 }
+
