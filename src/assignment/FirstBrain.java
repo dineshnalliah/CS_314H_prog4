@@ -2,8 +2,6 @@ package assignment;
 
 import java.util.ArrayList;
 
-import assignment.Board.Action;
-
 public class FirstBrain implements Brain {
 
     private ArrayList<Board> options;
@@ -18,7 +16,7 @@ public class FirstBrain implements Brain {
         firstMoves = new ArrayList<>();
         enumerateOptions(currentBoard);
 
-        int best = 0;
+        int best = Integer.MIN_VALUE;;
         int bestIndex = 0;
 
         // Check all of the options and get the one with the highest score
@@ -82,8 +80,47 @@ public class FirstBrain implements Brain {
      * we're going to give higher scores to Boards with
      * MaxHeights close to 0.
      */
+    // inspired by https://codemyroad.wordpress.com/2013/04/14/tetris-ai-the-near-perfect-player/
     private int scoreBoard(Board newBoard) {
-        return 100 - (newBoard.getMaxHeight() * 5);
+        int width = newBoard.getWidth();
+
+        // lose the game, worst outcome
+        if (newBoard.getMaxHeight() > JTetris.HEIGHT) return -1 * Integer.MAX_VALUE;
+
+        int totalHeight = 0;
+        int holes = 0;
+        int bumpiness = 0;
+        int wells = 0;
+
+        for (int x = 0; x < width; x++) {
+            int h = newBoard.getColumnHeight(x);
+            totalHeight += h;
+
+            // an empty cell below the top of a column is a hole
+            for (int y = 0; y < h; y++) {
+                if (newBoard.getGrid(x, y) == null) holes++;
+            }
+
+            // difference from the left neighbor
+            if (x > 0) {
+                bumpiness += Math.abs(h - newBoard.getColumnHeight(x - 1));
+            }
+
+            // a well is a column at least 2 lower than its shorter neighbor
+            int left = (x > 0) ? newBoard.getColumnHeight(x - 1) : Integer.MAX_VALUE;
+            int right = (x < width - 1) ? newBoard.getColumnHeight(x + 1) : Integer.MAX_VALUE;
+            int depth = Math.min(left, right) - h;
+            if (depth >= 2) wells += depth;
+        }
+
+        // weights come from yiyuan lee, but slightly changed to accommodate for ints
+
+        return   760 * newBoard.getRowsCleared()
+               - 510 * totalHeight
+               - 360 * holes
+               - 185 * bumpiness
+               - 150 * wells
+               -  50 * newBoard.getMaxHeight() * newBoard.getMaxHeight() / 10;
     }
     
 }
