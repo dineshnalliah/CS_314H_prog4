@@ -8,7 +8,7 @@ public class JBrainTetris extends JTetris {
     Brain brain;
     int count = 0;
     javax.swing.Timer brainTimer;
-    final int BRAIN_DELAY = 50;
+    int BRAIN_DELAY = 10;
 
     JBrainTetris() {
         super();
@@ -16,7 +16,7 @@ public class JBrainTetris extends JTetris {
 
         brainTimer = new javax.swing.Timer(BRAIN_DELAY, new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                tick(brain.nextMove(board));
+                if (gameOn) tick(brain.nextMove(board));
             }
         });
 

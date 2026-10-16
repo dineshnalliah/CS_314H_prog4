@@ -16,7 +16,7 @@ public class FirstBrain implements Brain {
         firstMoves = new ArrayList<>();
         enumerateOptions(currentBoard);
 
-        int best = Integer.MIN_VALUE;;
+        int best = Integer.MIN_VALUE;
         int bestIndex = 0;
 
         // Check all of the options and get the one with the highest score
@@ -32,14 +32,6 @@ public class FirstBrain implements Brain {
         return firstMoves.get(bestIndex);
     }
 
-    /**
-     * Test all of the places we can put the current Piece.
-     * Since this is just a Lame Brain, we aren't going to do smart
-     * things like rotating pieces.
-     */
-        /**
-     * Test all of the places we can put the current Piece, in every rotation.
-     */
     private void enumerateOptions(Board currentBoard) {
         Board rotated = currentBoard;
 
@@ -80,7 +72,8 @@ public class FirstBrain implements Brain {
      * we're going to give higher scores to Boards with
      * MaxHeights close to 0.
      */
-    // inspired by https://codemyroad.wordpress.com/2013/04/14/tetris-ai-the-near-perfect-player/
+    // criteria inspired by https://codemyroad.wordpress.com/2013/04/14/tetris-ai-the-near-perfect-player/
+    // while the metrics were taken from Lee, the Java implementation of calculating the metrics and determining the weights were self determined
     private int scoreBoard(Board newBoard) {
         int width = newBoard.getWidth();
 
@@ -113,14 +106,13 @@ public class FirstBrain implements Brain {
             if (depth >= 2) wells += depth;
         }
 
-        // weights come from yiyuan lee, but slightly changed to accommodate for ints
-
-        return   760 * newBoard.getRowsCleared()
-               - 510 * totalHeight
-               - 360 * holes
-               - 185 * bumpiness
-               - 150 * wells
-               -  50 * newBoard.getMaxHeight() * newBoard.getMaxHeight() / 10;
+        // coefficients are weights to decide which fields are more important in determining a correct board
+        return 60 * newBoard.getRowsCleared()
+            - 510 * totalHeight
+            - 270 * holes
+            - 600 * bumpiness
+            - 150 * wells
+            -  50 * newBoard.getMaxHeight() * newBoard.getMaxHeight() / 10;
     }
     
 }
