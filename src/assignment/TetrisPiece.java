@@ -32,8 +32,6 @@ public final class TetrisPiece implements Piece {
 
     public TetrisPiece(PieceType type) {
 
-        // don't even have to do a switch case since all pieces have 4 rotations
-
         // first one will be the default and thus index 0
         this(type, 0, type.getSpawnBody());
 
@@ -57,6 +55,7 @@ public final class TetrisPiece implements Piece {
         this.counterclockwise = before;
     }
 
+    // builds a single rotation of a piece and precomputes its skirt
     public TetrisPiece(PieceType type, int rotationIndex, Point[] body) {
         this.type = type;
         this.rotationIndex = rotationIndex;
@@ -64,6 +63,7 @@ public final class TetrisPiece implements Piece {
         this.skirt = calculateSkirt();
     }
 
+    // returns a new body rotated 90 degrees clockwise within the bounding box
     private Point[] performClockWiseRotation(Point[] cur, int dimension) {
         Point[] transformed = new Point[cur.length];
         for (int i = 0; i < cur.length; i++) {
@@ -72,6 +72,7 @@ public final class TetrisPiece implements Piece {
         return transformed;
     }
 
+    // computes the lowest block's y value in each column of the bounding box
     private int[] calculateSkirt() {
 
         int[] temp = new int[type.getBoundingBox().width];
@@ -94,11 +95,13 @@ public final class TetrisPiece implements Piece {
         return rotationIndex;
     }
 
+    // returns the precomputed piece rotated 90 degrees clockwise
     @Override
     public Piece clockwisePiece() {
         return clockwise;
     }
 
+    // returns the precomputed piece rotated 90 degrees counterclockwise
     @Override
     public Piece counterclockwisePiece() {
         return counterclockwise;
@@ -124,6 +127,7 @@ public final class TetrisPiece implements Piece {
         return skirt;
     }
 
+    // returns true if the other object is a TetrisPiece with the same type and rotation.
     @Override
     public boolean equals(Object other) {
         // Ignore objects which aren't also tetris pieces.

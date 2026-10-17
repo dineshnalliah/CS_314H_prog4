@@ -284,6 +284,7 @@ public final class TetrisBoard implements Board {
         return currentPosition == null ? null : new Point(currentPosition);
     }
 
+    // gets the next piece in play in the Tetris game
     @Override
     public void nextPiece(Piece p, Point spawnPosition) {
         // check if spawn pos is valid
@@ -300,6 +301,7 @@ public final class TetrisBoard implements Board {
         currentPosition = new Point(spawnPosition);
     }
 
+    // compares boards based on size, current piece and contents
     @Override
     public boolean equals(Object other) {
         if (!(other instanceof TetrisBoard))
@@ -340,6 +342,7 @@ public final class TetrisBoard implements Board {
         return maxHeight;
     }
 
+    // gets the highest y the bottom left corner of the bounding box will land if it is dropped at col x
     @Override
     public int dropHeight(Piece piece, int x) {
         int[] skirt = piece.getSkirt();

@@ -32,6 +32,7 @@ public class FirstBrain implements Brain {
         return firstMoves.get(bestIndex);
     }
 
+    // get all possible board permutations given the current state
     private void enumerateOptions(Board currentBoard) {
         Board rotated = currentBoard;
 
@@ -45,6 +46,7 @@ public class FirstBrain implements Brain {
         }
     }
 
+    // for a given piece, add all horizontal positions it can take
     private void addColumnOptions(Board start, Board.Action rotationMove) {
         // We can always drop where we are
         options.add(start.testMove(Board.Action.DROP));
@@ -67,11 +69,6 @@ public class FirstBrain implements Brain {
         }
     }
 
-    /**
-     * Since we're trying to avoid building too high,
-     * we're going to give higher scores to Boards with
-     * MaxHeights close to 0.
-     */
     // criteria inspired by https://codemyroad.wordpress.com/2013/04/14/tetris-ai-the-near-perfect-player/
     // while the metrics were taken from Lee, the Java implementation of calculating the metrics and determining the weights were self determined
     private int scoreBoard(Board newBoard) {
