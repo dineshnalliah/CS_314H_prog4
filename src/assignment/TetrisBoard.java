@@ -5,8 +5,9 @@ import java.util.Arrays;
 import java.util.Objects;
 
 /**
- * Represents a Tetris board -- essentially a 2-d grid of piece types (or nulls). Supports
- * tetris pieces and row clearing.  Does not do any drawing or have any idea of
+ * Represents a Tetris board -- essentially a 2-d grid of piece types (or
+ * nulls). Supports
+ * tetris pieces and row clearing. Does not do any drawing or have any idea of
  * pixels. Instead, just represents the abstract 2-d board.
  */
 public final class TetrisBoard implements Board {
@@ -28,7 +29,6 @@ public final class TetrisBoard implements Board {
 
     private int rowsCleared;
 
-
     // JTetris will use this constructor
     public TetrisBoard(int width, int height) {
         this.width = width;
@@ -45,7 +45,7 @@ public final class TetrisBoard implements Board {
         rowsCleared = 0;
     }
 
-    // copy constructor used for testMove() 
+    // copy constructor used for testMove()
     private TetrisBoard(TetrisBoard other) {
         this.width = other.width;
         this.height = other.height;
@@ -61,15 +61,21 @@ public final class TetrisBoard implements Board {
         this.maxHeight = other.maxHeight;
 
         this.currentPiece = other.currentPiece; // immutable so can directly assign
-        this.currentPosition = other.currentPosition == null ? null : new Point(other.currentPosition); // point is mutable so need to create new object
+        this.currentPosition = other.currentPosition == null ? null : new Point(other.currentPosition); // point is
+                                                                                                        // mutable so
+                                                                                                        // need to
+                                                                                                        // create new
+                                                                                                        // object
 
         this.lastAction = other.lastAction;
         this.lastResult = other.lastResult;
         this.rowsCleared = other.rowsCleared;
     }
 
+    // for each of the possible actions, checks if it can perform the
+    // movement/operation on the board, and returns the result
     @Override
-    public Result move(Action act) { 
+    public Result move(Action act) {
 
         lastAction = act;
         rowsCleared = 0; // upon a new action rowsCleared needs to be reset
@@ -80,13 +86,13 @@ public final class TetrisBoard implements Board {
         }
 
         switch (act) {
-            case LEFT: 
+            case LEFT:
                 lastResult = tryHorizontalShift(-1, currentPosition.x, currentPosition.y);
                 break;
-            case RIGHT: 
+            case RIGHT:
                 lastResult = tryHorizontalShift(1, currentPosition.x, currentPosition.y);
                 break;
-            case DOWN: 
+            case DOWN:
                 lastResult = tryVerticalShift(-1, currentPosition.x, currentPosition.y);
                 break;
             case DROP:
@@ -102,14 +108,15 @@ public final class TetrisBoard implements Board {
                 lastResult = Result.SUCCESS;
                 break;
             default:
-                lastResult = Result.SUCCESS; 
+                lastResult = Result.SUCCESS;
                 break;
         }
 
         return lastResult;
     }
 
-    // helper to check if all points in the body of a piece are in valid positions of the grid
+    // helper to check if all points in the body of a piece are in valid positions
+    // of the grid
     private boolean isValid(Piece piece, int x, int y) {
 
         Point[] temp = piece.getBody();
@@ -123,22 +130,25 @@ public final class TetrisBoard implements Board {
                 return false;
             }
 
-            if (grid[y2][x2] != null) return false;  // already taken
+            if (grid[y2][x2] != null)
+                return false; // already taken
         }
 
         return true;
     }
 
-    // helper that returns the array of valid wall kicks a piece can perform given its type and rotation direction
+    // helper that returns the array of valid wall kicks a piece can perform given
+    // its type and rotation direction
     private static Point[] getPossibleKicks(Piece piece, boolean clockwise) {
-        int from = piece.getRotationIndex(); 
+        int from = piece.getRotationIndex();
         switch (piece.getType()) {
             case SQUARE:
-                return new Point[] {new Point(0, 0)}; // no kicks
+                return new Point[] { new Point(0, 0) }; // no kicks
             case STICK:
                 return clockwise ? Piece.I_CLOCKWISE_WALL_KICKS[from] : Piece.I_COUNTERCLOCKWISE_WALL_KICKS[from];
             default:
-                return clockwise ? Piece.NORMAL_CLOCKWISE_WALL_KICKS[from] : Piece.NORMAL_COUNTERCLOCKWISE_WALL_KICKS[from];
+                return clockwise ? Piece.NORMAL_CLOCKWISE_WALL_KICKS[from]
+                        : Piece.NORMAL_COUNTERCLOCKWISE_WALL_KICKS[from];
         }
     }
 
@@ -163,8 +173,7 @@ public final class TetrisBoard implements Board {
         return Result.PLACE;
     }
 
-
-    // helper 
+    // helper
     private Result drop() { // could be optimized maybe
         int y = currentPosition.y;
         while (isValid(currentPiece, currentPosition.x, y - 1)) {
@@ -182,9 +191,10 @@ public final class TetrisBoard implements Board {
             int y = currentPosition.y + p.y;
 
             grid[y][x] = currentPiece.getType();
-            colHeights[x] = Math.max(colHeights[x], y+1); // compare the previous columnheight to the current y
+            colHeights[x] = Math.max(colHeights[x], y + 1); // compare the previous columnheight to the current y
             rowWidth[y]++; // another block has been added to row y
-            maxHeight = Math.max(maxHeight, colHeights[x]); // maxheight will be replaced if colheight has been updated and is larger
+            maxHeight = Math.max(maxHeight, colHeights[x]); // maxheight will be replaced if colheight has been updated
+                                                            // and is larger
         }
 
         // see if the placing filled any rows
@@ -195,11 +205,13 @@ public final class TetrisBoard implements Board {
         currentPosition = null;
     }
 
+    // removes rows that are full, updates, and returns the number of cleared rows
     private int clearRows() {
         int cur = 0;
 
         for (int r = 0; r < height; r++) {
-            if (rowWidth[r] == width) continue; // dont save rows that have been cleared
+            if (rowWidth[r] == width)
+                continue; // dont save rows that have been cleared
             grid[cur] = grid[r];
             rowWidth[cur] = rowWidth[r];
             cur++;
@@ -213,11 +225,13 @@ public final class TetrisBoard implements Board {
             rowWidth[cur] = 0;
         }
 
-        if (clearedRows > 0) recalculateHeights();
-        
+        if (clearedRows > 0)
+            recalculateHeights();
+
         return clearedRows;
     }
 
+    // updates the maxHeight and the colHeight for each of the columns
     private void recalculateHeights() {
         int previousHighest = maxHeight - 1;
         maxHeight = 0;
@@ -234,6 +248,7 @@ public final class TetrisBoard implements Board {
         }
     }
 
+    // checks if the rotation is valid, and returns the Result accordingly
     private Result tryRotate(boolean clockwise) {
         Piece rotated = clockwise ? currentPiece.clockwisePiece() : currentPiece.counterclockwisePiece();
 
@@ -249,23 +264,24 @@ public final class TetrisBoard implements Board {
         return Result.OUT_BOUNDS;
     }
 
-
-
+    // checks if an Action is valid
     @Override
-    public Board testMove(Action act) { 
+    public Board testMove(Action act) {
         TetrisBoard copy = new TetrisBoard(this);
         copy.move(act);
-        return copy; 
+        return copy;
     }
 
+    // returns the currentPiece
     @Override
-    public Piece getCurrentPiece() { 
-        return currentPiece; 
+    public Piece getCurrentPiece() {
+        return currentPiece;
     }
 
+    // returns the Point currentPiecePosition
     @Override
-    public Point getCurrentPiecePosition() { 
-        return currentPosition == null ? null : new Point(currentPosition); 
+    public Point getCurrentPiecePosition() {
+        return currentPosition == null ? null : new Point(currentPosition);
     }
 
     @Override
@@ -285,50 +301,53 @@ public final class TetrisBoard implements Board {
     }
 
     @Override
-    public boolean equals(Object other) { 
-        if (!(other instanceof TetrisBoard)) return false;
+    public boolean equals(Object other) {
+        if (!(other instanceof TetrisBoard))
+            return false;
         TetrisBoard o = (TetrisBoard) other;
         // deepequals because 2D array
-        return width == o.width && height == o.height && Objects.equals(currentPiece, o.currentPiece) && Objects.equals(currentPosition, o.currentPosition) && Arrays.deepEquals(grid, o.grid);
+        return width == o.width && height == o.height && Objects.equals(currentPiece, o.currentPiece)
+                && Objects.equals(currentPosition, o.currentPosition) && Arrays.deepEquals(grid, o.grid);
     }
 
     @Override
-    public Result getLastResult() { 
-        return lastResult; 
+    public Result getLastResult() {
+        return lastResult;
     }
 
     @Override
-    public Action getLastAction() { 
-        return lastAction; 
+    public Action getLastAction() {
+        return lastAction;
     }
 
     @Override
-    public int getRowsCleared() { 
-        return rowsCleared; 
+    public int getRowsCleared() {
+        return rowsCleared;
     }
 
     @Override
-    public int getWidth() { 
-        return width; 
+    public int getWidth() {
+        return width;
     }
 
     @Override
-    public int getHeight() { 
-        return height; 
+    public int getHeight() {
+        return height;
     }
 
     @Override
-    public int getMaxHeight() { 
-        return maxHeight; 
+    public int getMaxHeight() {
+        return maxHeight;
     }
 
     @Override
-    public int dropHeight(Piece piece, int x) { 
+    public int dropHeight(Piece piece, int x) {
         int[] skirt = piece.getSkirt();
         int result = Integer.MIN_VALUE;
 
         for (int i = 0; i < skirt.length; i++) {
-            if (skirt[i] == Integer.MAX_VALUE) continue; // no blocks in this column
+            if (skirt[i] == Integer.MAX_VALUE)
+                continue; // no blocks in this column
             int landing = colHeights[x + i] - skirt[i];
             result = Math.max(result, landing);
         }
@@ -336,20 +355,21 @@ public final class TetrisBoard implements Board {
     }
 
     @Override
-    public int getColumnHeight(int x) { 
-        return colHeights[x]; 
+    public int getColumnHeight(int x) {
+        return colHeights[x];
     }
 
     @Override
-    public int getRowWidth(int y) { 
-        return rowWidth[y]; 
+    public int getRowWidth(int y) {
+        return rowWidth[y];
     }
 
     @Override
-    public Piece.PieceType getGrid(int x, int y) { 
+    public Piece.PieceType getGrid(int x, int y) {
         // check bounds
-        if (x < 0 || x >= width || y < 0 || y >= height) return null;
-        return grid[y][x]; 
+        if (x < 0 || x >= width || y < 0 || y >= height)
+            return null;
+        return grid[y][x];
     }
 
     public String toString() {
@@ -364,4 +384,3 @@ public final class TetrisBoard implements Board {
         return s;
     }
 }
-
